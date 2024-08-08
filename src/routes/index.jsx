@@ -24,7 +24,10 @@ import  {
   Supervisor,
   ViewPage,
   FormalLetter,
+  LectureView,
+  AdmiViewSchool
 } from "../pages";
+
 
 
 export const routes = [
@@ -39,6 +42,12 @@ export const routes = [
       standalone:true,
     },
     {
+      path:"/viewpage",
+      component:<AdmiViewSchool />,
+      standalone:true,
+    },
+
+    {
       path:"/supervisor",
       component:<Supervisor />,
       standalone:true,
@@ -46,6 +55,11 @@ export const routes = [
     {
       path:"/letter",
       component:<FormalLetter />,
+      standalone:true,
+    },
+    {
+      path:"/view-schools",
+      component:<LectureView />,
       standalone:true,
     },
     {

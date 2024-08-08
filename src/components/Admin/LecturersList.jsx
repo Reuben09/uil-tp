@@ -1,17 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../Button";
 import { Input } from "../Input";
 import { BackButton } from '../BackButton';
 import { WindowReloader } from '../WindowReloader';
 import { useNavigate } from "react-router-dom";
 
-async function getAstudent(search, setLoader) {
+async function getAstudent(search, page, pageSize, setLoader) {
   const token = JSON.parse(localStorage.getItem("token"));
 
   setLoader(true);
   try {
-    const response = await fetch(`https://uil-tp.com.ng/admin/search-for-supervisor?search=${search}`, {
-      method: "POST", // Specify POST method here
+    const response = await fetch(`https://uil-tp.com.ng/admin/search-for-supervisor?search=${search}&page=${page}&pageSize=${pageSize}`, {
+      method: "POST",
       headers: {
         "Content-type": "application/json",
         Authorization: `Bearer ${token}`,
@@ -19,41 +19,49 @@ async function getAstudent(search, setLoader) {
     });
 
     if (!response.ok) {
-      console.log(response)
       throw new Error("Network response was not ok");
     }
 
-    const data = await response.json(); // Wait for JSON parsing
+    const data = await response.json();
     setLoader(false);
-    return data.data; // Ensure to return the correct data
+    return data; // Make sure data contains both the results and pagination info
   } catch (error) {
     alert("Error searching for lecturer");
     setLoader(false);
-    console.error(error); // Return an object with error message
-    return [];
+    console.error(error);
+    return { data: [], totalResults: 0 }; // Include totalResults for pagination
   }
 }
 
-
-
-export const LecturersList =  ({ setTpOptions }) => {
+export const LecturersList = ({ setTpOptions }) => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [loader, setLoader] = useState(false);
   const [data, setData] = useState([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalResults, setTotalResults] = useState(0);
 
   const handleHoldsearch = (event) => {
     setSearch(event.target.value);
   };
 
   const handleSearch = async () => {
-    console.log("search input", search);
-    const searchData = await getAstudent(search, setLoader);
+    const { data: searchData, totalResults: total } = await getAstudent(search, page, pageSize, setLoader);
     setData(searchData);
+    setTotalResults(total);
   };
 
   const handleBack = () => {
     setTpOptions('neutral');
+  };
+
+  useEffect(() => {
+    handleSearch();
+  }, [page, pageSize]); // Trigger search when page or pageSize changes
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
   };
 
   if (loader) {
@@ -61,11 +69,8 @@ export const LecturersList =  ({ setTpOptions }) => {
   }
 
   const Navigateto = (matric_no, type) => {
-    navigate(`view`,{ state: { matric_no: matric_no, type:type}});
+    navigate(`view`, { state: { matric_no, type } });
   };
-
-console.log(data)
-
 
   return (
     <>
@@ -102,16 +107,27 @@ console.log(data)
                   <td style={{ border: '1px solid #ddd', padding: '8px' }}>{lecturer.staff_number}</td>
                   <td style={{ border: '1px solid #ddd', padding: '8px' }}>{lecturer.fullname}</td>
                   <td style={{ border: '1px solid #ddd', padding: '8px' }}>{lecturer.phone}</td>
-                  <td style={{ border: '1px solid #ddd', padding: '8px' }}> <Button 
-                  label={"view"}
-handleSubmit={()=>Navigateto(lecturer?.staff_number, "staff")}
-                  /></td>
-              
-
+                  <td style={{ border: '1px solid #ddd', padding: '8px' }}>
+                    <Button 
+                      label={"view"}
+                      handleSubmit={() => Navigateto(lecturer?.staff_number, "staff")}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          <div className="pagination-controls">
+            <Button
+              label="Previous"
+              handleSubmit={() => handlePageChange(page > 1 ? page - 1 : page)}
+            />
+            <span>Page {page}</span>
+            <Button
+              label="Next"
+              handleSubmit={() => handlePageChange(page < Math.ceil(totalResults / pageSize) ? page + 1 : page)}
+            />
+          </div>
         </div>
       </div>
     </>

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Button } from "../Button"
 import { useNavigate } from "react-router-dom"
-
+import axios from 'axios'
 
 export const TPPostingLetter = () => {
   const [data, setData] = useState([]);
+  const [data2, setData2] = useState(null)
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
   const token = JSON.parse(localStorage.getItem("token"));
@@ -26,7 +27,6 @@ export const TPPostingLetter = () => {
       const student = data.data;
       console.log('student',student);
       setData(student);
-      
     } catch (error) {
       console.error('Error occurred while fetching student details:', error);
     }
@@ -34,6 +34,28 @@ export const TPPostingLetter = () => {
 
   useEffect(() => {
     Getdetails();
+  }, []);
+
+
+  const handleGetAll =async () => {
+    try {
+      const response = await axios.get(
+        "https://uil-tp.com.ng/admin/get_date",
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          }
+        }
+      );
+      setData2(response.data.data);
+    } catch (e) {
+      console.error('Error posting date:', e);
+    }
+  };
+  
+  useEffect(() => {
+    handleGetAll();
   }, []);
 
   return (
@@ -47,7 +69,7 @@ export const TPPostingLetter = () => {
 <>
 <div className="mt-20">
   <Button
-  handleSubmit={()=>navigate("/letter", { state: {data: data}})}
+  handleSubmit={()=>navigate("/letter", { state: {data: data, data2:data2}})}
   label="Download" />
 </div>
 </>

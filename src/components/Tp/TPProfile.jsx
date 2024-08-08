@@ -171,7 +171,7 @@ export const TPProfile = () => {
             />
           </div>
           <div className="my-2 w-full">
-            <p className="mb-2">Gender</p>
+            <p className="mb-2">Gender ({user?.gender})</p>
             <Select 
               options={GenderOptions} 
               value={gender} 
